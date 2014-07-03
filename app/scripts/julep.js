@@ -2,7 +2,8 @@
 
 var julepApp = angular.module('julep',[
 	'julepControllers',
-	'ngRoute'
+	'ngRoute',
+  'underscore'
 ]);
 
 julepApp.config(function($routeProvider) {
