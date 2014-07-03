@@ -1,1 +1,163 @@
-/* Will be compiled down to a single stylesheet with your sass files */
+/*
+ * General Styles
+ *
+ */
+
+
+ul {
+  list-style: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+body, html {
+	height: 100%;
+	font-family: monospace;
+	font-size: 1em;
+}
+
+body {
+	overflow: auto;
+}
+
+table {
+	border-collapse: collapse;
+  margin: 0 5px 20px;
+}
+
+.odd {
+	background-color: #EEE;
+}
+
+.text-right {
+	text-align: right;
+}
+
+
+/* End General Styles */
+
+/*
+ * Tx import
+ *
+ */
+
+.ignore_row {
+	text-decoration:line-through;
+	color: red;
+}
+
+/* End tx import */
+
+/*
+ * julep.html
+ *
+ */
+
+.nav-ctrl {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nav-ctrl a {
+  padding: 1em;
+}
+
+/* end julep.html */
+
+/*
+ * tx.html
+ *
+ */
+
+table.tx {
+  width: 90%;
+  border-collapse: separate;
+}
+
+#tx {
+  width: 95%;
+}
+
+td, th {
+	padding: 3px 5px;
+}
+
+td.selected {
+  border: 1px solid #333;
+}
+
+tr {
+  cursor: pointer;
+  height: 30px;
+}
+
+.no-visible-focus {
+  border: none;
+}
+
+tr:focus {
+  outline: 0px;
+  background-color: lightgreen;
+  color: black;
+}
+
+.controls {
+  font-weight: bold;
+}
+
+.category-input {
+  width: 130px;
+}
+
+.editing {
+  background-color: palegoldenrod;
+}
+
+/* End tx.html */
+
+/*
+ * budget.html
+ *
+ */
+
+.budget-container {
+  display: flex;
+}
+
+.budget-nav {
+  margin: 5px;
+}
+
+.budget-details {
+  margin: 5px;
+}
+
+.budget-list {
+  width: auto;
+  display: table-cell;
+}
+
+.budget-list li {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.selected {
+  background-color: lightgreen;
+}
+
+.table-header td {
+  font-weight: bold;
+  text-align: center;
+}
+
+.group-header td {
+  font-weight: bold;
+}
+
+.budget-totals {
+  font-weight: bold;
+  color: green;
+}
+
+/* end budget.html */

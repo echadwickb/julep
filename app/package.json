@@ -1,0 +1,13 @@
+{
+    "name": "julep",
+    "main": "julep.html",
+  "description": "Julep",
+  "version": "0.0.1",
+  "window": {
+    "title": "Julep",
+    "toolbar": true,
+    "frame": true,
+    "width": 1200,
+    "height": 680
+  }
+}

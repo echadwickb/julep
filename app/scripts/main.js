@@ -6,8 +6,8 @@
  * @see http://developer.chrome.com/trunk/apps/app.window.html
  */
 chrome.app.runtime.onLaunched.addListener(function() {
-    chrome.app.window.create('index.html', {
-        width: 500,
-        height: 309
+    chrome.app.window.create('julep.html', {
+        width: 1200,
+        height: 600
     });
 });

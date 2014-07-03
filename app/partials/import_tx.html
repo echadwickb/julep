@@ -1,0 +1,36 @@
+<input type="file" file-dialog="importFile" />
+<button name="save_tx" id="save_tx" ng-click="saveTx()">Save TXs</button>
+<select ng-model="acctId">
+	<option value="">Select an account</option>
+	<option ng-repeat="a in accts" value="{{a.id}}">{{a.name}}</option>
+</select>
+<span>{{importResult}}</span>
+<table>
+	<thead>
+		<tr>
+			<th class="table_gutter"></th>
+			<th class="column_type" ng-repeat="csvCol in csvCols track by $index">
+				<select ng-model="csvCols[$index]">
+					<option value="">Ignore</option>
+					<option value="date">Date</option>
+					<option value="amt">Amount</option>
+					<option value="desc">Description</option>
+					<option value="cat">Category</option>
+				</select>
+			</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr class="tx_row"
+			ng-class-odd="'odd'"
+			ng-click="ignoreRow(csvRow)"
+			ng-repeat="csvRow in csvRows"
+			ng-class="{'ignore_row': csvRow['ignore'], '': !csvRow['ignore']}"
+			ng-init="csvRow['ignore']=false">
+			<td class="table_gutter"></td>
+			<td ng-repeat="c in csvRow">
+				{{c}}
+			</td>
+		</tr>
+	</tbody>
+</table>

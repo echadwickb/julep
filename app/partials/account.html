@@ -1,0 +1,26 @@
+<a href="" ng-click="addAcct()">Add Account</a>
+<table>
+	<thead>
+		<tr>
+			<th></th>
+			<th>Account Name</th>
+			<th>Starting Balance</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr ng-repeat="acct in accts" ng-class-odd="'odd'">
+			<td>
+				<button ng-hide="acct.edit" ng-click="acct.edit=true">Edit</button>
+				<button ng-hide="!acct.edit" ng-click="saveAcct(acct)">Save</button>
+			</td>
+			<td>
+				<span ng-hide="acct.edit">{{acct.name}}</span>
+				<input ng-hide="!acct.edit" type="text" ng-model="acct.name" ng-keyup="keyUpSave(acct, $event)" />
+			</td>
+			<td class="text-right">
+				<span ng-hide="acct.edit">{{acct.strtBal}}</span>
+				<input ng-hide="!acct.edit" type="text" ng-model="acct.strtBal" ng-keyup="keyUpSave(acct, $event)" />
+			</td>
+		</tr>
+	</tbody>
+</table>

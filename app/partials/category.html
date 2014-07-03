@@ -1,0 +1,20 @@
+<table>
+	<thead><tr><th></th><th>Group</th><th>Category</th></tr></thead>
+	<tbody>
+	<tr ng-repeat="cat in cats | orderBy:['group','cat']" ng-class-odd="'odd'">
+		<td>
+			<button ng-hide="cat.edit" ng-click="cat.edit=true">Edit</button>
+			<button ng-hide="!cat.edit" ng-click="saveCat(cat)">Save</button>
+			<button ng-hide="!cat.edit" ng-click="cat.edit=false">Cancel</button>
+		</td>
+		<td>
+			<span ng-hide="cat.edit">{{cat.group}}</span>
+			<input ng-hide="!cat.edit" type="text" ng-model="cat.group" ng-keyup="keyUpSave(cat, $event)" />
+		</td>
+		<td>
+			<span ng-hide="cat.edit">{{cat.cat}}</span>
+			<input ng-hide="!cat.edit" type="text" ng-model="cat.cat" ng-keyup="keyUpSave(cat, $event)" />
+		</td>
+	</tr>
+	</tbody>
+</ul>

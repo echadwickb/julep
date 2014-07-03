@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" ng-app="julep" data-ng-csp>
+    <head>
+        <meta charset="utf-8">
+        <title>julep</title>
+        <!-- build:css styles/app.css -->
+        <link rel="stylesheet" href="styles/main.css">
+        <link rel="stylesheet" href="bower_components/angular/angular-csp.css">
+        <!-- endbuild -->
+        <script src="bower_components/angular/angular.js"></script>
+        <script src="bower_components/angular-route/angular-route.js"></script>
+        <script src="bower_components/d3/d3.min.js"></script>
+        <script src="scripts/julep.js"></script>
+        <script src="scripts/common.js"></script>
+        <script src="scripts/db.js"></script>
+        <script src="scripts/directives.js"></script>
+        <script src="scripts/models.js"></script>
+        <script src="scripts/controllers.js"></script>
+    </head>
+    <body>
+    	<ul class="nav-ctrl" ng-controller="navCtrl" >
+    		<li ng-repeat="nav in navs">
+    			<a href="" ng-click="$parent.goTo(nav.path)">{{nav.label}}</a>
+    		</li>
+		</ul>
+		<div ng-view></div>
+    </body>
+</html>
