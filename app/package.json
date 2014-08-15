@@ -1,6 +1,6 @@
 {
-    "name": "julep",
-    "main": "julep.html",
+  "name": "julep",
+  "main": "julep.html",
   "description": "Julep",
   "version": "0.0.1",
   "window": {

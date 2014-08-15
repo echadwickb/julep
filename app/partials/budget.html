@@ -1,12 +1,12 @@
 <div class="budget-container">
     <div class="budget-nav">
-        <a href="" ng-click="addBdgt()">Add Budget</a>
+        <a href="" ng-click="add()">Add Budget</a>
         <ul class="budget-list">
             <li ng-repeat="b in bdgts | orderBy:'-id' track by $index"
-                ng-click="loadBdgt(b)"
+                ng-click="load(b)"
                 ng-class-odd="'odd'"
                 ng-class="{selected: (b.id == bdgt.id)}">
-                <strong>{{b.name}}</strong><br />
+                <strong>{{b.name}}</strong>&nbsp;<a href="" ng-click="remove($event, b)">remove</a><br />
                 {{b.strt | date:'MM/dd/yyyy'}} - {{b.end | date:'MM/dd/yyyy'}}
             </li>
         </ul>
@@ -21,7 +21,7 @@
         </select>
         Start: <input julep-date ng-model="bdgt.strt" type="date" />
         End: <input julep-date ng-model="bdgt.end" type="date" />
-        <button ng-click="updateBdgt(bdgt, $event)">Update Budget</button>
+        <button ng-click="update(bdgt, $event)">Update Budget</button>
         <table>
             <tbody>
                 <tr>
