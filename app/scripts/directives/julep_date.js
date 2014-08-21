@@ -21,7 +21,7 @@
     };
   }
 
-  JulepDate.$inject = [];
+  JulepDate.$inject = ['dateFilter'];
 
   angular.module('julep')
     .directive('julepDate', JulepDate);
