@@ -1,22 +1,67 @@
 <!doctype html>
-<html lang="en" ng-app="julep" data-ng-csp>
+<html lang="en" ng-app="julep" ng-strict-di>
     <head>
         <meta charset="utf-8">
         <title>julep</title>
-        <link rel="stylesheet" href="styles/main.css">
 
-        <script src="libraries/angular.js"></script>
-        <script src="libraries/angular-route.js"></script>
-        <script src="libraries/d3.min.js"></script>
-        <script src="libraries/underscore.js"></script>
-        <script src="scripts/julep.js"></script>
+        <!-- build:css styles/main.css -->
+        <link rel="stylesheet" href="styles/main.css">
+        <!-- endbuild -->
+
+        <script type="text/javascript">
+          // allows us to handle uncaught node exceptions
+          // more gracefully
+          process.on('uncaughtException', function(e) {
+
+            console.error(e.stack);
+          });
+        </script>
+        <!-- build:jslib scripts/lib.js -->
+        <script src="bower_components/angular/angular.min.js"></script>
+        <script src="bower_components/angular-route/angular-route.min.js"></script>
+        <script src="bower_components/d3/d3.min.js"></script>
+        <script src="bower_components/underscore/underscore.js"></script>
+        <!-- endbuild -->
+
     </head>
     <body>
-    	<ul class="nav-ctrl" ng-controller="navCtrl" >
-    		<li ng-repeat="nav in navs">
-    			<a href="" ng-click="$parent.goTo(nav.path)">{{nav.label}}</a>
-    		</li>
-		</ul>
-		<div ng-view></div>
+    	<ul class="nav-ctrl" ng-controller="NavCtrl" >
+      		<li ng-repeat="nav in navs">
+      			<a href="" ng-click="$parent.goTo(nav.path)">{{nav.label}}</a>
+      		</li>
+  		</ul>
+  		<div ng-view></div>
+
+      <!-- build:js scripts/julep.js -->
+      <script src="scripts/julep.js"></script>
+
+      <!-- services -->
+      <script src="scripts/services/db.js"></script>
+      <script src="scripts/services/d3.js"></script>
+      <script src="scripts/services/underscore.js"></script>
+      <script src="scripts/services/aggregation.js"></script>
+
+      <!-- models -->
+      <script src="scripts/models/acct.js"></script>
+      <script src="scripts/models/bdgt.js"></script>
+      <script src="scripts/models/cat.js"></script>
+      <script src="scripts/models/tx.js"></script>
+
+      <!-- directives -->
+      <script src="scripts/directives/file_dialog.js"></script>
+      <script src="scripts/directives/julep_curr.js"></script>
+      <script src="scripts/directives/julep_date.js"></script>
+      <script src="scripts/directives/julep_edit_row.js"></script>
+      <script src="scripts/directives/julep_search.js"></script>
+
+      <!-- controllers -->
+      <script src="scripts/controllers/acct.js"></script>
+      <script src="scripts/controllers/bdgt.js"></script>
+      <script src="scripts/controllers/cat.js"></script>
+      <script src="scripts/controllers/import_tx.js"></script>
+      <script src="scripts/controllers/nav.js"></script>
+      <script src="scripts/controllers/tx.js"></script>
+      <!-- endbuild -->
+
     </body>
 </html>

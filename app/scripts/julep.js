@@ -1,14 +1,9 @@
 'use strict';
 
-// allows us to handle uncaught node exceptions
-// more gracefully
-process.on('uncaughtException', function(e) {
-  console.error(e);
-});
-
 (function() {
 
   function JulepConfig($routeProvider) {
+
     $routeProvider.when('/import_tx', {
       templateUrl: 'partials/import_tx.html',
       controller: 'ImportTxCtrl'
@@ -40,11 +35,11 @@ process.on('uncaughtException', function(e) {
   }
 
   angular.module('julep', [
-    'julepControllers',
-    'ngRoute',
-    'underscore',
-    'aggregation',
-    'd3'
+    // 'julepControllers',
+    'ngRoute'
+    // 'underscore',
+    // 'aggregation',
+    // 'd3'
   ])
     .config(JulepConfig);
 
