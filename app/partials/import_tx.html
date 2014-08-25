@@ -28,7 +28,7 @@
 			ng-class="{'ignore_row': csvRow['ignore'], '': !csvRow['ignore']}"
 			ng-init="csvRow['ignore']=false">
 			<td class="table_gutter"></td>
-			<td ng-repeat="c in csvRow">
+			<td ng-repeat="c in csvRow track by $index">
 				{{c}}
 			</td>
 		</tr>
