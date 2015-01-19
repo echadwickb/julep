@@ -23,7 +23,7 @@ Search: <input type="search" julep-search ng-model="search" />
             <th>Account</th>
             <th>Date</th>
             <th>Description</th>
-            <th>Category</th>
+            <th>Categories</th>
             <th>Amount</th>
             <th>Balance</th>
         </tr>
@@ -42,10 +42,13 @@ Search: <input type="search" julep-search ng-model="search" />
             </td>
             <td>{{acctsById[tx.acctId].name}}</td>
             <td>{{tx.date | date:'MM/dd/yyyy'}}</td>
-            <td>{{tx.desc}}</td>
+            <td>
+              <input type="text" ng-model="tx.desc" ng-show="tx.edit" ng-keyup="updateTx(tx, $event)" />
+              <span ng-show="!tx.edit">{{tx.desc}}</span>
+            </td>
             <td class="category-input">
-                <input type="text" ng-model="tx.cat" ng-show="tx.edit" ng-keyup="updateTxCat(tx, $event)" list="categories" />
-                <span ng-show="!tx.edit">{{tx.cat || 'uncategorized'}}</span>
+                <input type="text" ng-model="tx.cat[0].cat" ng-show="tx.edit" ng-keyup="updateTx(tx, $event)" list="categories" />
+                <span ng-show="!tx.edit">{{ tx.cat[0].cat }}</span>
             </td>
             <td class="text-right">{{ (tx.amt / 100) | currency}}</td>
             <td class="text-right">{{ (tx.balance / 100) | currency}}</td>

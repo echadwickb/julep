@@ -2,7 +2,31 @@
 
 	'use strict';
 
-	function TxCtrl($scope, txModel, catModel, acctModel) {
+	function organizeAcctsById(accts) {
+
+		var indexedAccts = [];
+
+		for (var z in accts) {
+
+			indexedAccts[accts[z].id] = accts[z];
+		}
+
+		return indexedAccts;
+	}
+
+	function setBalances(accts, txs) {
+
+		return txs.map(function (tx, i, txs) {
+
+			accts[tx.acctId].currBal += tx.amt;
+
+			tx.balance = accts[tx.acctId].currBal;
+
+			return tx;
+		});
+	}
+
+	function TxCtrl($scope, $q, txModel, catModel, acctModel) {
 
 		var allTxs = [];
 
@@ -18,43 +42,33 @@
 		$scope.acctsById = [];
 		$scope.acctId = '';
 
-		txModel.getAll(function (txs) {
-			allTxs = txs;
-			// $scope.txs = txs;
-			// $scope.$apply();
+		var dataPromises = {};
+
+		dataPromises['txs'] = txModel.getAll();
+		dataPromises['cats'] = catModel.getAll();
+		dataPromises['accts'] = acctModel.getAll();
+
+		$q.all(dataPromises).then(function (result) {
+
+			console.info(result);
+
+			$scope.cats = result.cats;
+			$scope.accts = result.accts;
+			$scope.acctsById = organizeAcctsById($scope.accts);
+
+			allTxs = setBalances($scope.acctsById, result.txs.reverse());
+
 			$scope.txFilter();
-			$scope.$apply();
+
 		});
 
-		catModel.getAll(function (cats) {
-			$scope.cats = cats;
-			$scope.$apply();
-		});
+		$scope.updateTx = function (tx, $event) {
 
-		acctModel.getAll(function (accts) {
-			$scope.accts = accts;
-			for (var i in accts) {
-				$scope.acctsById[accts[i].id] = accts[i];
-			}
-			console.info($scope.acctsById);
-
-			$scope.$apply();
-		});
-
-		$scope.updateTxCat = function (tx, $event) {
-
-			// we cancelled account
-			if ($event.keyCode === 27) {
-				tx.edit = false;
-			}
+			console.info('somebody pressed something');
 
 			// save on enter
 			if ($event.keyCode === 13) {
 
-				// is this a new category? then save it
-
-				console.info('Saving tx: %O', tx);
-				delete tx.edit;
 				txModel.save(tx);
 				tx.edit = false;
 			}
@@ -84,7 +98,7 @@
 		};
 	}
 
-	TxCtrl.$inject = ['$scope', 'txModel', 'catModel', 'acctModel'];
+	TxCtrl.$inject = ['$scope', '$q', 'txModel', 'catModel', 'acctModel'];
 
 	angular.module('julep')
 		.controller('TxCtrl', TxCtrl);

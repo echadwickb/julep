@@ -23,6 +23,7 @@
     },
     "predef": [
       "angular",
-      "indexedDB"
+      "indexedDB",
+      "IDBKeyRange"
     ]
 }

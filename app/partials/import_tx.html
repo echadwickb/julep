@@ -5,17 +5,16 @@
 	<option ng-repeat="a in accts" value="{{a.id}}">{{a.name}}</option>
 </select>
 <span>{{importResult}}</span>
+<datalist id="columnTypes">
+
+</datalist>
 <table>
 	<thead>
 		<tr>
 			<th class="table_gutter"></th>
 			<th class="column_type" ng-repeat="csvCol in csvCols track by $index">
 				<select ng-model="csvCols[$index]">
-					<option value="">Ignore</option>
-					<option value="date">Date</option>
-					<option value="amt">Amount</option>
-					<option value="desc">Description</option>
-					<option value="cat">Category</option>
+					<option ng-repeat="choice in columnChoices" value="{{choice.val}}">{{choice.label}}</option>
 				</select>
 			</th>
 		</tr>

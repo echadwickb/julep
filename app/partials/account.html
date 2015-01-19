@@ -5,6 +5,7 @@
 			<th></th>
 			<th>Account Name</th>
 			<th>Starting Balance</th>
+			<th></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -12,6 +13,7 @@
 			<td>
 				<button ng-hide="acct.edit" ng-click="acct.edit=true">Edit</button>
 				<button ng-hide="!acct.edit" ng-click="saveAcct(acct)">Save</button>
+				<button ng-hide="acct.edit" ng-click="deleteTxs(acct)">Delete</button>
 			</td>
 			<td>
 				<span ng-hide="acct.edit">{{acct.name}}</span>

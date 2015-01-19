@@ -18,7 +18,7 @@
             if (files.length > 0) {
 
               var file = files[0];
-              console.info('file: %o', file);
+              // console.info('file: %o', file);
               $scope.getFileContent(file);
             }
 

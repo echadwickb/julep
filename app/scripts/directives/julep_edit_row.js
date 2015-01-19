@@ -14,7 +14,8 @@
         // UP_KEYPRESS = 38,
         // DOWN_KEYPRESS= 40,
         var CTRL_E_KEYPRESS = 5,
-            ESC_KEYPRESS = 27;
+            ESC_KEYPRESS = 27,
+            ENTER_KEYUP = 13;
 
         element.on('keyup', function (event) {
 
@@ -51,6 +52,12 @@
           */
 
           if (event.keyCode === ESC_KEYPRESS ) {
+            scope.tx.edit = false;
+            scope.$apply();
+            element[0].focus();
+          }
+
+          if (event.keyCode === ENTER_KEYUP ) {
             scope.tx.edit = false;
             scope.$apply();
             element[0].focus();

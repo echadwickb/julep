@@ -8,34 +8,22 @@
 
 		catModel.getAll = function (cb) {
 
-			db.then(function (db) {
-
-				db.getAll('cat', cb);
-			});
+			return db.getAll('cat', cb);
 		};
 
 		catModel.save = function (cat) {
 
-			db.then(function (db) {
-
-				db.save('cat', cat);
-			});
+			return db.save('cat', cat);
 		};
 
 		catModel.get = function (cat, cb) {
 
-			db.then(function (db) {
-
-				db.get('cat', cat, cb);
-			});
+			return db.get('cat', cat, cb);
 		};
 
 		catModel.remove = function (cat, cb) {
 
-			db.then(function (db) {
-
-				db.remove('cat', cat, cb);
-			});
+			return db.remove('cat', cat, cb);
 		};
 
 		return catModel;

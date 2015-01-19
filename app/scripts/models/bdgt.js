@@ -7,34 +7,41 @@
 
     bdgtModel.getAll = function(cb) {
 
-      db.then(function(db) {
-
-        db.getAll('bdgt', cb);
-      });
+      return db.getAll('bdgt', cb);
     };
 
     bdgtModel.save = function(bdgt) {
 
-      db.then(function(db) {
-
-        db.save('bdgt', bdgt);
-      });
+      return db.save('bdgt', bdgt);
     };
 
     bdgtModel.get = function(bdgtId, cb) {
 
-      db.then(function(db) {
-
-        db.get('bdgt', bdgtId, cb);
-      });
+      return db.get('bdgt', bdgtId, cb);
     };
 
     bdgtModel.remove = function(bdgtId, cb) {
 
-      db.then(function(db) {
+      return db.remove('bdgt', bdgtId, cb);
+    };
 
-        db.remove('bdgt', bdgtId, cb);
-      });
+    bdgtModel.new = function () {
+      return {
+        strt: new Date(),
+        end: new Date(),
+        acctIds: [],
+        name: '',
+        strtAmt: 0,
+        endAmt: 0,
+        totals: {
+          bdgt: 0,
+          spent: 0,
+          avg: 0,
+          last: 0
+        },
+        groups: {},
+        changed: true
+      };
     };
 
     return bdgtModel;

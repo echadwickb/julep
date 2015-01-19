@@ -2,41 +2,58 @@
 
   'use strict';
 
+  function getStore(db, name, mode) {
+    var transaction = db.transaction(name, mode || 'readonly').objectStore(name);
+
+    transaction.onerror = function(event) {
+      console.error('Transaction error: %O', event.target.errCode);
+    };
+
+    return transaction;
+  };
+
   function Db($q) {
 
-    var db,
+    var db = {},
       name = 'julep',
       version = 3,
       deferred = $q.defer();
 
     var req = indexedDB.open(name, version);
 
-    req.onsuccess = function() {
-      db = this.result;
+    // passes object found by provided id to
+    // provided callback
+    db.get = function(store, id, cb) {
 
-      db.onerror = function(event) {
-        console.error('DB error: %O', event.target.errorCode);
-      };
+      var getDeferred = $q.defer();
 
-      // Starts and returns a transaction in the
-      // requested mode
-      db.getStore = function(name, mode) {
-        var transaction = db.transaction(name, mode || 'readonly').objectStore(name);
+      deferred.promise.then(function (db) {
 
-        transaction.onerror = function(event) {
-          console.error('Transaction error: %O', event.target.errCode);
+        getStore(db, store, 'readonly').get(id).onsuccess = function(event) {
+
+          var item = event.target.result;
+
+          getDeferred.resolve(item);
         };
+      });
 
-        return transaction;
-      };
+      return getDeferred.promise;
+    };
 
-      // passes all records from object store to
-      // provided callback as array
-      db.getAll = function(store, cb) {
+    // passes all records from object store to
+    // provided callback as array
+    db.getAll = function(store) {
 
-        var coll = [];
+      var coll = [];
 
-        db.getStore(store, 'readonly').openCursor().onsuccess = function(event) {
+      var getDeferred = $q.defer();
+
+      console.info('deferred: %o', deferred);
+
+      deferred.promise.then(function (db) {
+
+        console.info("db is %o", db);
+        getStore(db, store, 'readonly').openCursor().onsuccess = function(event) {
 
           var c = event.target.result;
 
@@ -47,30 +64,24 @@
 
           } else {
 
-            cb(coll);
+            getDeferred.resolve(coll);
           }
         };
+      });
 
-      };
+      return getDeferred.promise;
+    };
 
-      // passes object found by provided id to
-      // provided callback
-      db.get = function(store, id, cb) {
+    // saves object to datastore
+    db.save = function(store, item) {
 
-        db.getStore(store, 'readonly').get(id).onsuccess = function(event) {
+      var saveDeferred = $q.defer();
 
-          var item = event.target.result;
-
-          cb(item);
-        };
-      };
-
-      // saves object to datastore
-      db.save = function(store, item, cb) {
-
-        var s = db.getStore(store, 'readwrite');
+      deferred.promise.then(function (db) {
 
         var putReq;
+
+        var s = getStore(db, store, 'readwrite');
 
         try {
 
@@ -79,25 +90,35 @@
           throw e;
         }
 
-        putReq.onsuccess = function() {
+        putReq.onsuccess = function(event) {
+
+          item.id = event.target.result;
           console.info('saved %O', item);
 
-          if (cb) {
-						cb(item);
-					}
+          saveDeferred.resolve(item);
 
         };
 
-        putReq.onerror = function() {
-          console.info('error saving %O', item);
+        putReq.onerror = function(event) {
+          console.info('error saving %O', event.target.error);
+          saveDeferred.reject(event)
         };
-      };
 
-      // removes object from datastore
-      db.remove = function(store, id, cb) {
-        var s = db.getStore(store, 'readwrite');
+      });
+
+      return saveDeferred.promise;
+    };
+
+    // removes object from datastore
+    db.remove = function(store, id, cb) {
+
+      var removedDefer = $q.defer();
+
+      deferred.promise.then(function (db) {
 
         var removeReq;
+
+        var s = getStore(db, store, 'readwrite');
 
         try {
           removeReq = s.delete(id);
@@ -106,18 +127,57 @@
         }
 
         removeReq.onsuccess = function() {
+
           console.info('removed item ' + id);
-
-          if (cb) {
-						cb(id);
-					}
-
+          removedDefer.resolve();
         };
 
         removeReq.onerror = function() {
           console.info('error removing item ' + id);
+          removedDefer.reject();
         };
+        
+      });
+
+      return removedDefer.promise;
+    };
+
+    db.removeByIndex = function (store, idx, idxValue, cb) {
+
+      var removedDefer = $q.defer();
+
+      deferred.promise.then(function (db) {
+        var s = db.getStore(store, 'readwrite');
+
+        s.index(idx)
+        .openKeyCursor(IDBKeyRange.only(idxValue))
+        .onsuccess = function(event) {
+
+          var c = event.target.result;
+
+          if (c) {
+
+            c.delete(c.primaryKey);
+            c.continue();
+
+          } else {
+
+            removedDefer.resolve();
+          }
+        };
+      });
+
+      return removedDefer.promise;
+    };
+
+
+    req.onsuccess = function() {
+      db = this.result;
+
+      db.onerror = function(event) {
+        console.error('DB error: %O', event.target.errorCode);
       };
+
 
       deferred.resolve(db);
 
@@ -200,9 +260,12 @@
       }
     };
 
+    return db;
+    /*
     return deferred.promise.then(function(db) {
       return db;
     });
+    */
   }
 
   Db.$inject = ['$q'];

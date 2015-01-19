@@ -15,10 +15,9 @@
          ng-hide="bdgt.name === undefined">
         <span>{{status}}</span><br />
         Name: <input type="text" ng-model="bdgt.name" />
-        <select ng-model="bdgt.acctId">
-            <option value="">Select an account</option>
-            <option ng-repeat="a in accts" value="{{a.id}}">{{a.name}}</option>
-        </select>
+        <label ng-repeat="a in accts">
+            {{a.name}}&nbsp;<input type="checkbox" ng-model="a['include']" />
+        </label><br />
         Start: <input julep-date ng-model="bdgt.strt" type="date" />
         End: <input julep-date ng-model="bdgt.end" type="date" />
         <button ng-click="update(bdgt, $event)">Update Budget</button>
@@ -39,7 +38,7 @@
                     <td>6 mo avg</td>
                 </tr>
                 <tr ng-hide="show(group)"
-                    ng-repeat-start="group in bdgt.groups"
+                    ng-repeat-start="(groupName, group) in bdgt.groups"
                     class="group-header">
                     <td>
                         <a href="" ng-click="group.show = false">x</a>
@@ -47,24 +46,22 @@
                         <span ng-click="moveGroup(bdgt.groups, $index,  1)">&#x25BC;</span>
                     </td>
                     <td colspan="2">
-                        <span ng-show="group.group !== 'ungrouped'">{{group.group}}</span>
-                        <a href="" title="Group these" ng-show="group.group == 'ungrouped'">ungrouped</a>
+                        <span>{{groupName}}</span>
                     </td>
                     <td class="text-right">{{(group.bdgt / 100).toFixed(2)}}</td>
-                    <td class="text-right">{{(group.spent / 100).toFixed(2)}}</td>
+                    <td class="text-right">{{(group.spent  / 100).toFixed(2)}}</td>
                     <td class="text-right">{{((group.bdgt - group.spent) / 100).toFixed(2)}}</td>
-                    <td class="text-right">{{(group.last / 100).toFixed(2)}}</td>
-                    <td class="text-right">{{(group.lastYr / 100).toFixed(2)}}</td>
-                    <td class="text-right">{{(group.avg  / 100 / 6).toFixed(2)}}</td>
+                    <td class="text-right">{{(group.lastMo  / 100).toFixed(2)}}</td>
+                    <td class="text-right">{{(group.thisMoLastYr  / 100).toFixed(2)}}</td>
+                    <td class="text-right">{{(group.lastSixMos   / 100 / 6).toFixed(2)}}</td>
                 </tr>
-                <tr ng-hide="show(cat)" ng-repeat="cat in group.cats | orderBy:['cat']">
+                <tr ng-hide="show(cat)" ng-repeat="(catName, cat) in group.cats | orderBy:['cat']">
                     <td />
                     <td>
                         <a href="" ng-click="cat.show = false">x</a>
                     </td>
                     <td>
-                        <span ng-show="cat.cat !== 'uncategorized'">{{cat.cat}}</span>
-                        <a href="" title="Categorize these" ng-show="cat.cat == 'uncategorized'">uncategorized</a>
+                        <span>{{catName}}</span>
                     </td>
                     <td>
                         <input type="text" class="text-right"
@@ -77,28 +74,28 @@
                     <td class="text-right">{{((cat.bdgt - cat.spent) / 100).toFixed(2)}}</td>
                     <td class="text-right">
                         <a href="" ng-click="setBudget(cat.last, cat, group, bdgt)"
-                            title="Use as budget">{{(cat.last / 100).toFixed(2)}}</a></td>
+                            title="Use as budget">{{(cat.lastMo / 100).toFixed(2)}}</a></td>
                     <td class="text-right">
                         <a href="" ng-click="setBudget(cat.lastYr, cat, group, bdgt)"
-                            title="Use as budget">{{(cat.lastYr / 100).toFixed(2)}}</a></td>
+                            title="Use as budget">{{(cat.thisMoLastYr / 100).toFixed(2)}}</a></td>
                     <td class="text-right">
                         <a href="" ng-click="setBudget(cat.avg / 6, cat, group, bdgt)"
-                            title="Use as budget">{{(cat.avg  / 100 / 6).toFixed(2)}}</a></td>
+                            title="Use as budget">{{(cat.lastSixMos  / 100 / 6).toFixed(2)}}</a></td>
                 </tr>
                 <tr ng-hide="!group.show" ng-repeat-end>
                     <td colspan="9" />
                 </tr>
                 <tr class="budget-totals">
                     <td colspan="3">Totals</td>
-                    <td class="text-right">{{(bdgt.totals.bdgt / 100).toFixed(2)}}</td>
-                    <td class="text-right">{{(bdgt.totals.spent / 100).toFixed(2)}}</td>
-                    <td class="text-right">{{((bdgt.totals.bdgt - bdgt.totals.spent) / 100).toFixed(2)}}</td>
+                    <td class="text-right">{{(bdgt.bdgt / 100).toFixed(2)}}</td>
+                    <td class="text-right">{{(bdgt.spent / 100).toFixed(2)}}</td>
+                    <td class="text-right">{{((bdgt.bdgt - bdgt.spent) / 100).toFixed(2)}}</td>
                     <td colspan="3"></td>
                 </tr>
                 <tr class="budget-totals">
                     <td colspan="3">Month End</td>
-                    <td colspan="1" class="text-right">{{((bdgt.strtAmt - bdgt.totals.bdgt) / 100).toFixed(2)}}</td>
-                    <td colspan="1" class="text-right">{{((bdgt.strtAmt - bdgt.totals.spent) / 100).toFixed(2)}}</td>
+                    <td colspan="1" class="text-right">{{((bdgt.strtAmt + bdgt.bdgt) / 100).toFixed(2)}}</td>
+                    <td colspan="1" class="text-right">{{((bdgt.strtAmt + bdgt.spent) / 100).toFixed(2)}}</td>
                     <td colspan="3"></td>
                 </tr>
             </tbody>

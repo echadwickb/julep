@@ -8,34 +8,39 @@
 
 		txModel.getAll = function (cb) {
 
-			db.then(function (db) {
-
-				db.getAll('tx', cb);
-			});
+			return db.getAll('tx', cb);
 		};
 
-		txModel.save = function (cat) {
+		txModel.save = function (tx) {
 
-			db.then(function (db) {
+			// this prevents any unnecessary properties
+			// from persisting
+			var tempTx = {
+				acctId: tx.acctId,
+				amt: tx.amt,
+				id: tx.id,
+				cat: tx.cat,
+				csv: tx.csv,
+				date: tx.date,
+				desc: tx.desc
+			}
 
-				db.save('tx', cat);
-			});
+			return db.save('tx', tempTx);
 		};
 
 		txModel.get = function (id, cb) {
 
-			db.then(function (db) {
-
-				db.get('tx', id, cb);
-			});
+			return db.get('tx', id, cb);
 		};
 
 		txModel.remove = function (id, cb) {
 
-			db.then(function (db) {
+			return db.remove('tx', id, cb);
+		};
 
-				db.remove('tx', id, cb);
-			});
+		txModel.removeByIndex = function (idx, idxValue, cb) {
+
+			return db.removeByIndex('tx', idx, idxValue, cb);
 		};
 
 		return txModel;

@@ -2,44 +2,227 @@
 
   'use strict';
 
-  function BdgtCtrl($scope, acctModel, txModel, catModel, bdgtModel, aggregation, _) {
+  function dateMath (d, yearOffset, monthOffset, dayOffset) {
+
+    return new Date(
+      d.getFullYear() + (yearOffset || 0),
+      d.getMonth() + (monthOffset || 0),
+      d.getDate() + (dayOffset || 0)
+    );
+  };
+
+  function getRanges(strt, end) {
+
+    return {
+      'spent': {
+        'start': strt,
+        'end': end
+      },
+      'lastMo': {
+        'start': dateMath(strt, 0, -1, 0),
+        'end': dateMath(strt, 0, 0, -1)
+      },
+      'lastSixMos': {
+        'start': dateMath(strt, 0, -6, 0),
+        'end': dateMath(strt, 0, 0, -1)
+      },
+      'thisMoLastYr': {
+        'start': dateMath(strt, -1, 0, 0),
+        'end': dateMath(end, -1, 0, 0)
+      }
+    };
+  };
+
+  function sumTxs(txs) {
+
+    return txs.reduce(function (ttl, tx) {
+      return tx.amt + ttl;
+    }, 0);
+  };
+
+  function filterRangeTxs(start, end, txs) {
+    return _.filter(txs, function (tx) {
+      return tx.date >= start && tx.date <= end;
+    });
+  };
+
+  function filterAccountTxs(acctIds, txs) {
+
+    return _.filter(txs, function (tx) {
+      return acctIds.indexOf(tx.acctId) > -1;
+    });
+  };
+
+  function aggregateTxs(bdgt, txs) {
+
+      var ranges = getRanges(bdgt.strt, bdgt.end);
+
+      var txsForBdgtAcct = filterAccountTxs(bdgt.acctIds, txs);
+
+      console.info(txsForBdgtAcct);
+
+      var groupedTxs = _.groupBy(txsForBdgtAcct, function (tx) {
+        return tx.cat[0].cat;
+      });
+
+      console.info(groupedTxs);
+
+      var finalTotals = {};
+
+      console.info(_.keys(groupedTxs));
+
+      _.each(_.keys(groupedTxs), function (cat) {
+
+        finalTotals[cat] = {};
+
+        _.each(_.keys(ranges), function (key) {
+
+          finalTotals[cat][key] = sumTxs(
+            filterRangeTxs(
+              ranges[key].start,
+              ranges[key].end,
+              groupedTxs[cat]));
+
+        });
+      });
+
+      console.info(finalTotals);
+
+      return finalTotals;
+
+  };
+
+  function assignCategories(bdgt, groupedTxs) {
+
+    _.each(_.keys(bdgt.groups), function (group) {
+
+      _.each(_.keys(group.cats), function (cat) {
+
+        var catTotals = groupedTxs[cat] || {
+          lastMo: 0,
+          lastSixMos: 0,
+          spent: 0,
+          thisMoLastYr: 0
+        };
+
+        bdgt.groups[group][cat].bdgt = bdgt.group.cat.bdgt || 0;
+        bdgt.groups[group][cat].lastMo = catTotals.lastMo;
+        bdgt.groups[group][cat].lastSixMos = catTotals.lastSixMos;
+        bdgt.groups[group][cat].spent = catTotals.spent;
+        bdgt.groups[group][cat].thisMoLastYr = catTotals.thisMoLastYr;
+
+        delete groupedTxs[cat];
+      });
+
+    });
+
+    // add default budgets to the remaining categories
+    bdgt.groups['ungrouped'] =  {
+      show: true,
+      order: 1000,
+      cats: addDefaultBdgt(groupedTxs)
+    }
+
+    // total up each group
+    bdgt.groups = _.each(bdgt.groups, function(group) {
+      return _.extend(group, sumGroup(group));
+    })
+
+    return bdgt;
+  };
+
+  function addDefaultBdgt(categories) {
+    return _.each(categories, function (value, key) {
+      return _.defaults(value, { bdgt: 0 });
+    })
+  };
+
+  function sumGroup(group) {
+
+    return _.reduce(group.cats, function(totals, cat) {
+
+      return {
+        bdgt: totals.bdgt + cat.bdgt,
+        lastMo: totals.lastMo + cat.lastMo,
+        lastSixMos: totals.lastSixMos + cat.lastSixMos,
+        spent: totals.spent + cat.spent,
+        thisMoLastYr: totals.thisMoLastYr + cat.thisMoLastYr
+      };
+
+    }, {
+      bdgt: 0,
+      lastMo: 0,
+      lastSixMos: 0,
+      spent: 0,
+      thisMoLastYr: 0
+    });
+  };
+
+  function calculateTotals(bdgt) {
+
+    var groupTotals = _.reduce(bdgt.groups, function(totals, cat) {
+
+      return {
+        bdgt: totals.bdgt + cat.bdgt,
+        spent: totals.spent + cat.spent
+      };
+
+    }, {
+      bdgt: 0,
+      spent: 0,
+    });
+
+    bdgt.bdgt = groupTotals.bdgt;
+    bdgt.spent = groupTotals.spent;
+
+  };
+
+  function calculateStartingAmounts(accts, bdgt, txs) {
+
+    var startDate = new Date(1900, 0, 1);
+
+    var txTotal = sumTxs(
+      filterRangeTxs(
+        startDate,
+        dateMath(bdgt.strt, 0, 0, -1),
+        filterAccountTxs(bdgt.acctIds, txs)
+      )
+    );
+
+    var acctTotal = _.reduce(accts, function (total, acct) {
+
+      return (bdgt.acctIds.indexOf(acct.id) > -1) ?
+        (acct.strtBal + total) : total;
+    }, 0);
+
+    return acctTotal + txTotal;
+  };
+
+  function BdgtCtrl($scope, $q, acctModel, txModel, bdgtModel, aggregation, _) {
 
     $scope.bdgts = [];
     $scope.bdgt = {};
     $scope.accts = [];
-    $scope.cats = [];
+    $scope.groupedTxs = {};
 
-    acctModel.getAll(function(accts) {
-      $scope.accts = accts;
-      $scope.$apply();
-    });
+    var promiseData = {};
+    var txs = [];
 
-    bdgtModel.getAll(function(bdgts) {
-      $scope.bdgts = bdgts;
-      $scope.$apply();
-    });
+    promiseData['acct'] = acctModel.getAll();
+    promiseData['bdgt'] = bdgtModel.getAll();
+    promiseData['txs'] = txModel.getAll();
 
-    catModel.getAll(function(cats) {
-      $scope.cats = cats;
+    $q.all(promiseData).then(function (result) {
+
+      console.info(result);
+      $scope.accts = result['acct'];
+      $scope.bdgts = result['bdgt'];
+      txs = result['txs'];
     });
 
     $scope.add = function() {
 
-      $scope.bdgt = {
-        strt: new Date(),
-        end: new Date(),
-        name: '',
-        strtAmt: 0,
-        endAmt: 0,
-        totals: {
-          bdgt: 0,
-          spent: 0,
-          avg: 0,
-          last: 0
-        },
-        groups: [],
-        changed: true
-      };
+      $scope.bdgt = bdgtModel.new();
 
       $scope.bdgts.push($scope.bdgt);
     };
@@ -68,20 +251,32 @@
 
     $scope.load = function(bdgt) {
 
-      aggTxs(bdgt, function(bdgt) {
-        $scope.bdgt = bdgt;
-        $scope.$apply();
-      });
+      bdgt = assignCategories(bdgt, aggregateTxs(bdgt, txs));
+
+      $scope.bdgt = bdgt;
+
     };
 
     $scope.update = function(bdgt) {
 
-      // get updated numbers
-      bdgt = aggTxs(bdgt, function(bdgt) {
+      bdgt.acctIds = [];
 
-        bdgtModel.save(bdgt);
-        bdgt.changed = false;
+      _.each($scope.accts, function (acct) {
+          if (acct.include) {
+            bdgt.acctIds.push(acct.id);
+          }
       });
+
+      assignCategories(bdgt, aggregateTxs(bdgt, txs));
+
+      calculateTotals(bdgt);
+
+      bdgt.strtAmt = calculateStartingAmounts($scope.accts, bdgt, txs);
+
+      // bdgtModel.save(bdgt);
+      bdgt.changed = false;
+
+      console.info(bdgt);
     };
 
     $scope.moveGroup = function(groups, index, dir) {
@@ -121,266 +316,13 @@
 
     $scope.updateCat = function(cat, group, bdgt) {
 
-      group.bdgt = group.cats.reduce(function(p, c) {
+      group.bdgt = _.reduce(group.cats, function(p, c) {
         return p + c.bdgt;
       }, 0);
 
-      bdgt.totals.bdgt = bdgt.groups.reduce(function(p, c) {
+      bdgt.bdgt = _.reduce(bdgt.groups, function(p, c) {
         return p + c.bdgt;
       }, 0);
-    };
-
-    // sums txs for bdgt date range by group/category
-    var aggTxs = function(bdgt, cb) {
-
-      var ranges = {
-        'spent': {
-          'start': bdgt.strt,
-          'end': bdgt.end
-        },
-        'lastMo': {
-          'start': aggregation.dateMath(bdgt.strt, 0, -1, 0),
-          'end': aggregation.dateMath(bdgt.strt, 0, 0, -1)
-        },
-        'lastSixMos': {
-          'start': aggregation.dateMath(bdgt.strt, 0, -6, 0),
-          'end': aggregation.dateMath(bdgt.strt, 0, 0, -1)
-        },
-        'thisMoLastYr': {
-          'start': aggregation.dateMath(bdgt.strt, -1, 0, 0),
-          'end': aggregation.dateMath(bdgt.end, -1, 0, 0)
-        }
-      };
-
-
-
-      var STRTLASTYR = new Date(
-        bdgt.strt.getFullYear() - 1,
-        bdgt.strt.getMonth(),
-        bdgt.strt.getDate()
-      );
-
-      var ENDLASTYR = new Date(
-        bdgt.end.getFullYear() - 1,
-        bdgt.end.getMonth(),
-        bdgt.end.getDate()
-      );
-
-      var LASTSIXMOS = new Date(
-        bdgt.strt.getFullYear(),
-        bdgt.strt.getMonth() - 6,
-        bdgt.strt.getDate()
-      );
-
-      var LASTMO = new Date(
-        bdgt.strt.getFullYear(),
-        bdgt.strt.getMonth() - 1,
-        bdgt.strt.getDate()
-      );
-
-      // create associative array of categories
-      var assocCats = {
-        uncategorized: {
-          order: 10000,
-          group: 'ungrouped',
-          cat: 'uncategorized',
-          bdgt: 0,
-          spent: 0,
-          avg: 0,
-          last: 0,
-          lastYr: 0
-        }
-      };
-
-      var assocGroups = {};
-
-      catModel.getAll(function(categories) {
-        for (var c in categories) {
-
-          assocCats[categories[c].cat] = {
-            order: 0,
-            group: categories[c].group,
-            cat: categories[c].cat,
-            bdgt: 0,
-            spent: 0,
-            avg: 0,
-            last: 0,
-            lastYr: 0,
-            show: true
-          };
-        }
-      });
-
-      txModel.getAll(function(txs) {
-
-        // summarize transactions by category for each
-        // set of date ranges
-        var txsByCat = aggregation.txByGroupCatTime(txs, ranges);
-
-        // mixin categories and transactions summarized by category
-        var groupsCategories = _.chain($scope.cats)
-          // organize categories by group
-          .groupBy(function(cat) {
-
-            return cat.group || 'ungrouped';
-          })
-          // The result here should be an array of groups
-          // containing an array of categories with transaction
-          // totals were relevant or 0s if category doesn't have
-          // any transactions. We also need to pull in budgets
-          // if present in the current bdgt object
-          .map(function(group, name) {
-
-            var cats = _.map(group, function(cat) {
-
-              // look in the summarized transactions for this
-              // category
-              var matchingCat = _.find(txsByCat, function(tx) {
-                return tx.cat === cat.cat;
-              });
-
-              // did we find it? If not, create a 0 totaled category
-              // with the date range breakouts
-              matchingCat = matchingCat || _.reduce(ranges, function(newCat, range, name) {
-
-                return newCat[name] || 0;
-              }, {});
-
-              // look for a budget for this category
-
-            });
-
-            return {
-              'group': name,
-              'cats': cats
-            };
-
-          })
-          .value();
-
-/*
-        var newBdgt = {
-          accts = [bdgt.]
-
-        }
-				*/
-
-        console.info('new bdgt: %o', groupsCategories);
-
-				var i, z;
-
-        // aggregate transactions into categories
-        for (i in txs) {
-
-          if (txs[i].acctId === bdgt.acctId) {
-
-            txs[i].cat = txs[i].cat || 'uncategorized';
-
-            if (txs[i].date >= STRTLASTYR && txs[i].date <= ENDLASTYR) {
-
-              assocCats[txs[i].cat].lastYr += txs[i].amt;
-
-            } else if (txs[i].date >= LASTSIXMOS && txs[i].date < LASTMO) {
-
-              assocCats[txs[i].cat].avg += txs[i].amt;
-
-            } else if (txs[i].date >= LASTMO && txs[i].date < bdgt.strt) {
-
-              assocCats[txs[i].cat].last += txs[i].amt;
-
-              bdgt.strtAmt = txs[i].balance;
-
-            } else if (txs[i].date >= bdgt.strt && txs[i].date < bdgt.end) {
-
-              assocCats[txs[i].cat].spent += txs[i].amt;
-            }
-          }
-        }
-
-        // mix in budget numbers and category order from saved budget
-        for (i in bdgt.groups) {
-
-          for (z in bdgt.groups[i].cats) {
-
-            assocCats[bdgt.groups[i].cats[z].cat].bdgt = bdgt.groups[i].cats[z].bdgt;
-            assocCats[bdgt.groups[i].cats[z].cat].order = bdgt.groups[i].cats[z].order;
-            assocCats[bdgt.groups[i].cats[z].cat].show = bdgt.groups[i].cats[z].show || true;
-          }
-        }
-
-        // reset budget totals
-        bdgt.totals = {
-          bdgt: 0,
-          spent: 0,
-          avg: 0,
-          last: 0,
-          lastYr: 0
-        };
-
-        // aggregate into groups and total budget
-        for (i in assocCats) {
-
-          assocGroups[assocCats[i].group] = assocGroups[assocCats[i].group] || {
-            cats: {},
-            bdgt: 0,
-            spent: 0,
-            avg: 0,
-            last: 0,
-            lastYr: 0,
-            show: true
-          };
-
-          assocGroups[assocCats[i].group].cats[assocCats[i].cat] = assocCats[i];
-
-          assocGroups[assocCats[i].group].bdgt += assocCats[i].bdgt;
-          assocGroups[assocCats[i].group].spent += assocCats[i].spent;
-          assocGroups[assocCats[i].group].last += assocCats[i].last;
-          assocGroups[assocCats[i].group].lastYr += assocCats[i].lastYr;
-          assocGroups[assocCats[i].group].avg += assocCats[i].avg;
-
-          bdgt.totals.bdgt += assocCats[i].bdgt;
-          bdgt.totals.spent += assocCats[i].spent;
-
-        }
-
-        // mix in group order from saved budget
-        for (i in bdgt.groups) {
-          assocGroups[bdgt.groups[i].group].order = bdgt.groups[i].order;
-          assocGroups[bdgt.groups[i].group].show = bdgt.groups[i].show || true;
-        }
-
-        bdgt.groups = [];
-
-        var orderCounter = 0;
-        // convert to array
-        for (i in assocGroups) {
-
-          var cats = [];
-          for (z in assocGroups[i].cats) {
-            cats.push(assocGroups[i].cats[z]);
-          }
-
-          bdgt.groups.push({
-            group: i,
-            order: assocGroups[i].order || orderCounter,
-            bdgt: assocGroups[i].bdgt,
-            spent: assocGroups[i].spent,
-            avg: assocGroups[i].avg,
-            last: assocGroups[i].last,
-            lastYr: assocGroups[i].lastYr,
-            show: assocGroups[i].show,
-            cats: cats
-          });
-
-          orderCounter++;
-        }
-
-        if (typeof cb !== 'undefined') {
-
-          console.info('budget object: %o', bdgt);
-          cb(bdgt);
-        }
-      });
     };
 
     $scope.setBudget = function(amt, cat, group, bdgt) {
@@ -390,7 +332,7 @@
     };
   }
 
-  BdgtCtrl.$inject = ['$scope', 'acctModel', 'txModel', 'catModel', 'bdgtModel', 'aggregation', '_'];
+  BdgtCtrl.$inject = ['$scope', '$q', 'acctModel', 'txModel', 'bdgtModel', 'aggregation', '_'];
 
   angular
     .module('julep')

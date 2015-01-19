@@ -144,8 +144,9 @@ module.exports = function(grunt) {
       options: {
           platforms: ['win','osx'],
           buildDir: '<%= nwConfig.dist %>', // Where the build version of my node-webkit app is saved
+          version: '0.11.1'
       },
-      src: ['<%= yeoman.dist %>/*'] // Your node-webkit app
+      src: ['<%= yeoman.dist %>/**'] // Your node-webkit app
     }
   });
 
