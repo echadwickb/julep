@@ -7,3 +7,6 @@ app/bower_components
 cache
 distNw
 /nbproject/private/
+/nbproject/project.properties
+/nbproject/project.xml
+npm-debug.log
